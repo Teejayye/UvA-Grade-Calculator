@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f7f5">
+<title>Grade Calculator · UvA</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232f7a64'/%3E%3Ctext x='32' y='43' font-size='30' font-family='system-ui,sans-serif' font-weight='700' fill='white' text-anchor='middle'%3E7.5%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f6f7f5; --card:#ffffff; --ink:#1d2321; --muted:#68716d; --line:#e3e6e3; --soft:#eef1ee;
+  --accent:#2f7a64; --accent-ink:#ffffff; --accent-soft:#e3f0eb;
+  --pass:#1f8a4c; --pass-soft:#e2f4e8; --fail:#c8372d; --fail-soft:#fbe7e5; --warn:#a86a00; --warn-soft:#fdf1dc;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.04);
+  --r:16px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121614; --card:#1a1f1d; --ink:#e8ece9; --muted:#9aa49f; --line:#2b322f; --soft:#222826;
+    --accent:#5cc3a2; --accent-ink:#0d1b16; --accent-soft:#1d3229;
+    --pass:#4cc97f; --pass-soft:#173323; --fail:#ff7468; --fail-soft:#3a1d1a; --warn:#f0b54d; --warn-soft:#352a14;
+    --shadow:none; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121614; --card:#1a1f1d; --ink:#e8ece9; --muted:#9aa49f; --line:#2b322f; --soft:#222826;
+  --accent:#5cc3a2; --accent-ink:#0d1b16; --accent-soft:#1d3229;
+  --pass:#4cc97f; --pass-soft:#173323; --fail:#ff7468; --fail-soft:#3a1d1a; --warn:#f0b54d; --warn-soft:#352a14;
+  --shadow:none; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.wrap{max-width:640px;margin:0 auto;padding:12px 16px 24px}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 4px;max-width:640px;margin:0 auto}
+.brand{font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand small{display:block;font-weight:500;font-size:12px;color:var(--muted);letter-spacing:0}
+.iconbtn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;height:40px;min-width:40px;padding:0 12px;font:inherit;font-size:14px;cursor:pointer}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:26px 4px 10px;font-weight:600}
+h2 .num{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);align-items:center;justify-content:center;font-size:11px;margin-right:6px;vertical-align:1px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.card + .card{margin-top:12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row > .field{flex:1 1 140px}
+.field{margin:0 0 14px}
+.field:last-child{margin-bottom:0}
+label.lbl,.lbl{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;margin-bottom:6px}
+.hint{font-size:13px;color:var(--muted);margin-top:4px}
+input[type=text],input[type=number],select{width:100%;height:46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:0 12px;font:inherit;font-size:16px;-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input.big{height:60px;font-size:26px;font-weight:650;text-align:center;font-variant-numeric:tabular-nums}
+input.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:15px}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px}
+.seg label{flex:1;position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:9px 6px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;line-height:1.2}
+.seg input:checked + span{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg input:focus-visible + span{outline:2px solid var(--accent)}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px}
+.switch input{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(20px)}
+.info{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);font:600 12px/1 system-ui,sans-serif;cursor:pointer;padding:0;flex:none}
+.info[aria-expanded=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tip{display:none;font-size:14px;font-weight:400;background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:10px 12px;margin:0 0 10px}
+.tip.open{display:block}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:650;height:46px;padding:0 18px;border-radius:12px;cursor:pointer}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.btn.small{height:36px;padding:0 12px;font-size:14px;border-radius:10px}
+.btn.danger{background:var(--fail-soft);color:var(--fail)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;cursor:pointer}
+.chip:active{background:var(--soft)}
+/* Result */
+.result{text-align:center;padding:22px 16px 16px;border-radius:var(--r);margin-top:12px;background:var(--soft);transition:background .2s}
+.result.pass{background:var(--pass-soft)}
+.result.fail{background:var(--fail-soft)}
+.result .label{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.grade{font-size:76px;line-height:1;font-weight:750;letter-spacing:-.03em;margin:8px 0 6px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.grade.mid{font-size:56px}
+.pass .grade{color:var(--pass)}
+.fail .grade{color:var(--fail)}
+.badge{display:inline-block;font-size:14px;font-weight:700;border-radius:999px;padding:4px 12px;background:var(--card)}
+.pass .badge{color:var(--pass)} .fail .badge{color:var(--fail)}
+.sub{font-size:14px;color:var(--muted);margin-top:8px}
+.formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;background:var(--soft);border-radius:10px;padding:10px 12px;margin-top:12px;overflow-x:auto;white-space:nowrap;text-align:left}
+details.steps{margin-top:10px;text-align:left}
+details.steps summary{cursor:pointer;font-size:14px;font-weight:600;color:var(--accent);padding:6px 0;list-style:none}
+details.steps summary::-webkit-details-marker{display:none}
+details.steps summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+details.steps[open] summary::before{transform:rotate(90deg)}
+ol.calc{margin:6px 0 0;padding-left:22px;font-size:14px}
+ol.calc li{margin:4px 0;font-variant-numeric:tabular-nums}
+ol.calc code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:var(--soft);padding:1px 5px;border-radius:5px}
+.note{font-size:14px;border-radius:12px;padding:10px 12px;margin-top:12px;background:var(--warn-soft);color:var(--ink)}
+.note b{color:var(--warn)}
+.okline{color:var(--pass);font-weight:650}.badline{color:var(--fail);font-weight:650}
+.part{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px}
+.part h3{margin:0 0 12px;font-size:15px}
+.hidden{display:none!important}
+/* table */
+.tablewrap{max-height:380px;overflow:auto;border:1px solid var(--line);border-radius:12px;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--card);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+tr.p td:last-child{color:var(--pass);font-weight:650} tr.f td:last-child{color:var(--fail)}
+tr.edge td{background:var(--accent-soft);font-weight:700}
+tr.cur td{outline:2px solid var(--accent);outline-offset:-2px}
+svg.chart{width:100%;height:auto;display:block;margin-top:8px}
+.chart .axis{stroke:var(--line)} .chart .gridl{stroke:var(--line);stroke-dasharray:2 4}
+.chart text{fill:var(--muted);font-size:12px;font-family:system-ui,sans-serif}
+.chart .curve{fill:none;stroke:var(--accent);stroke-width:2.5;stroke-linejoin:round}
+.chart .passl{stroke:var(--pass);stroke-dasharray:6 5;stroke-width:1.5}
+.chart .passlbl{fill:var(--pass);font-weight:600}
+.chart .dot{fill:var(--accent);stroke:var(--card);stroke-width:3}
+/* lists */
+.comp{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.comp .row{gap:8px}
+.comp .field{margin-bottom:8px}
+.comp-h{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.comp-h input{flex:1}
+.x{width:40px;height:40px;border-radius:10px;border:0;background:var(--soft);color:var(--muted);font-size:20px;cursor:pointer;flex:none}
+.sumline{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-top:10px}
+.preset{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.preset:last-child{border-bottom:0}
+.preset .nm{flex:1;min-width:0}
+.preset .nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preset .nm small{color:var(--muted)}
+.tag{font-size:11px;font-weight:700;background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.mini div{background:var(--soft);border-radius:10px;padding:8px;text-align:center;font-size:13px;color:var(--muted)}
+.mini b{display:block;font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.err{color:var(--fail);font-size:14px;margin-top:6px}
+/* nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:10}
+nav.tabs .in{display:flex;max-width:640px;width:100%;gap:4px}
+nav.tabs button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;padding:6px 2px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected=true]{color:var(--accent);background:var(--accent-soft)}
+section.view{display:none} section.view.active{display:block}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:all .2s;z-index:20;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.foot{font-size:12px;color:var(--muted);text-align:center;margin-top:28px}
+@media (min-width:700px){ .grade{font-size:88px} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Grade Calculator<small>For UvA exams &amp; courses · works offline</small></div>
+  <button class="iconbtn" id="themeBtn" type="button" aria-label="Switch light or dark mode">◐ Auto</button>
+</header>
+
+<main class="wrap">
+
+<!-- ===================== EXAM ===================== -->
+<section class="view active" id="view-exam" aria-label="Exam">
+  <h2><span class="num">1</span>What kind of exam?</h2>
+  <div class="card">
+    <div class="field">
+      <input type="text" data-bind="exam.name" placeholder="Exam name (optional), e.g. QDA2 midterm" aria-label="Exam name">
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Exam type">
+      <label><input type="radio" name="etype" value="points" data-bind="exam.type" data-struct="1"><span>Open<br><small>points</small></span></label>
+      <label><input type="radio" name="etype" value="mc" data-bind="exam.type" data-struct="1"><span>Multiple<br><small>choice</small></span></label>
+      <label><input type="radio" name="etype" value="mixed" data-bind="exam.type" data-struct="1"><span>Mixed<br><small>MC + open</small></span></label>
+    </div>
+  </div>
+
+  <h2><span class="num">2</span>How is it graded?</h2>
+  <div class="card" id="setup"></div>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label class="lbl">Lowest grade</label><input type="text" inputmode="decimal" data-bind="exam.lo" data-num="1"></div>
+      <div class="field"><label class="lbl">Highest grade</label><input type="text" inputmode="decimal" data-bind="exam.hi" data-num="1"></div>
+    </div>
+    <div class="field">
+      <label class="lbl">Rounding <button class="info" type="button" data-tip="tip-round" aria-expanded="false" aria-label="What is rounding?">i</button></label>
+      <p class="tip" id="tip-round">How the grade is rounded at the end. "0.1" turns 6.36 into 6.4; "0.5" turns 6.36 into 6.5; "1" gives whole numbers. Halves are rounded up (6.25 → 6.3).</p>
+      <div class="seg">
+        <label><input type="radio" name="eround" value="none" data-bind="exam.round"><span>None</span></label>
+        <label><input type="radio" name="eround" value="0.1" data-bind="exam.round"><span>0.1</span></label>
+        <label><input type="radio" name="eround" value="0.5" data-bind="exam.round"><span>0.5</span></label>
+        <label><input type="radio" name="eround" value="1" data-bind="exam.round"><span>1</span></label>
+      </div>
+    </div>
+    <div class="field">
+      <label class="lbl">When do you pass? <button class="info" type="button" data-tip="tip-pass" aria-expanded="false" aria-label="About passing">i</button></label>
+      <p class="tip" id="tip-pass">Most UvA exams are passed with a 5.5; some hard courses use 5.0. Some exams instead say "you need at least x points". "Exact grade" means a 5.45 is a fail, even if it would be rounded to 5.5.</p>
+      <div class="seg" id="passModeSeg">
+        <label><input type="radio" name="epm" value="grade" data-bind="exam.passMode" data-struct="1"><span>Grade ≥ pass mark</span></label>
+        <label id="pmPoints"><input type="radio" name="epm" value="points" data-bind="exam.passMode" data-struct="1"><span>Points ≥ x</span></label>
+      </div>
+    </div>
+    <div class="row" id="passGradeRow">
+      <div class="field"><label class="lbl">Pass mark</label><input type="text" inputmode="decimal" data-bind="exam.pass" data-num="1"></div>
+      <div class="field"><label class="lbl">Compare using</label>
+        <select data-bind="exam.passCheck"><option value="exact">Exact (5.45 = fail)</option><option value="rounded">Rounded</option></select></div>
+    </div>
+    <div class="row hidden" id="passPointsRow">
+      <div class="field"><label class="lbl">Score needed to pass</label><input type="text" inputmode="decimal" data-bind="exam.passPoints" data-num="1"></div>
+      <div class="field"><label class="lbl">Pass mark (for chart)</label><input type="text" inputmode="decimal" data-bind="exam.pass" data-num="1"></div>
+    </div>
+  </div>
+
+  <h2><span class="num">3</span>Your grade</h2>
+  <div class="card">
+    <div class="row" id="scoreInputs"></div>
+    <div id="examResult"></div>
+  </div>
+
+  <h2><span class="num">4</span>What score do I need?</h2>
+  <div class="card">
+    <div class="field"><label class="lbl">Grade I want</label><input type="text" class="big" inputmode="decimal" data-bind="exam.target" data-num="1" aria-label="Target grade"></div>
+    <div class="chips" id="targetChips"></div>
+    <div id="neededResult"></div>
+  </div>
+
+  <h2><span class="num">5</span>Table &amp; chart</h2>
+  <div class="card">
+    <div class="seg hidden" id="tablePartSeg">
+      <label><input type="radio" name="tpart" value="0" data-bind="ui.tablePart" data-num="1" data-struct="1"><span>Part A</span></label>
+      <label><input type="radio" name="tpart" value="1" data-bind="ui.tablePart" data-num="1" data-struct="1"><span>Part B</span></label>
+    </div>
+    <div id="chartBox"></div>
+    <div class="tablewrap" id="tableBox"></div>
+    <div class="hint" id="tableHint"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="flex:2 1 200px"><label class="lbl">Save this exam setup</label><input type="text" id="saveExamName" placeholder="Preset name"></div>
+      <div class="field" style="flex:0 0 auto"><button class="btn" type="button" id="saveExamBtn">Save</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COURSE ===================== -->
+<section class="view" id="view-course" aria-label="Course grade">
+  <h2>Course grade</h2>
+  <div class="card">
+    <div class="field"><input type="text" data-bind="course.name" placeholder="Course name, e.g. QDA2" aria-label="Course name"></div>
+    <div class="hint" style="margin-top:-6px;margin-bottom:6px">Add the parts of your course. Leave the grade empty for parts you haven't done yet.</div>
+    <div id="compList"></div>
+    <div class="sumline"><span id="weightSum"></span><button class="btn small ghost" type="button" id="addComp">+ Add part</button></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <div class="field"><label class="lbl">Pass mark</label><input type="text" inputmode="decimal" data-bind="course.pass" data-num="1"></div>
+      <div class="field"><label class="lbl">Grade I'm aiming for</label><input type="text" inputmode="decimal" data-bind="course.target" data-num="1"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label class="lbl">Round final grade</label>
+        <select data-bind="course.round"><option value="none">No rounding</option><option value="0.1">to 0.1</option><option value="0.5">to 0.5</option><option value="1">to whole number</option></select></div>
+      <div class="field"><label class="lbl">Compare using</label>
+        <select data-bind="course.passCheck"><option value="exact">Exact (5.45 = fail)</option><option value="rounded">Rounded</option></select></div>
+    </div>
+  </div>
+
+  <div id="courseResult"></div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="row" style="align-items:flex-end">
+      <div class="field" style="flex:2 1 200px"><label class="lbl">Save this course</label><input type="text" id="saveCourseName" placeholder="Preset name"></div>
+      <div class="field" style="flex:0 0 auto"><button class="btn" type="button" id="saveCourseBtn">Save</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== AVERAGE ===================== -->
+<section class="view" id="view-avg" aria-label="Average grade">
+  <h2>Average grade <button class="info" type="button" data-tip="tip-avg" aria-expanded="false" aria-label="About the average">i</button></h2>
+  <p class="tip" id="tip-avg">Your weighted average = (grade × weight + …) ÷ (sum of weights). Use credits (EC) as weights, or any number you like. Give every course the same weight for a simple average.</p>
+  <div class="card">
+    <div id="avgList"></div>
+    <div class="sumline"><span id="avgCount"></span><button class="btn small ghost" type="button" id="addAvg">+ Add course</button></div>
+  </div>
+  <div id="avgResult"></div>
+  <h2>Reach a target average</h2>
+  <div class="card">
+    <div class="row">
+      <div class="field"><label class="lbl">Average I want</label><input type="text" inputmode="decimal" data-bind="avg.target" data-num="1"></div>
+      <div class="field"><label class="lbl">Weight of next course</label><input type="text" inputmode="decimal" data-bind="avg.nextW" data-num="1"></div>
+    </div>
+    <div id="avgNeed"></div>
+  </div>
+</section>
+
+<!-- ===================== PRESETS ===================== -->
+<section class="view" id="view-presets" aria-label="Saved">
+  <h2>Saved exams</h2>
+  <div class="card" id="examPresets"></div>
+  <h2>Saved courses</h2>
+  <div class="card" id="coursePresets"></div>
+  <h2>Move to another device</h2>
+  <div class="card">
+    <p class="hint" style="margin-top:0">Everything is stored only in this browser. To move it, export a small file and import it on your other device.</p>
+    <div class="row">
+      <button class="btn" type="button" id="exportBtn">Export file</button>
+      <label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Import file<input type="file" id="importFile" accept="application/json,.json" style="display:none"></label>
+    </div>
+    <div class="hint" id="storageNote"></div>
+  </div>
+  <p class="foot">No tracking, no internet needed. Always check your official grade in SIS / your course manual.</p>
+</section>
+
+</main>
+
+<nav class="tabs" aria-label="Sections"><div class="in" role="tablist">
+  <button type="button" role="tab" data-view="exam" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Exam</button>
+  <button type="button" role="tab" data-view="course" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>Course</button>
+  <button type="button" role="tab" data-view="avg" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/><circle cx="19" cy="17" r="2"/></svg>Average</button>
+  <button type="button" role="tab" data-view="presets" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Saved</button>
+</div></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* =========================================================
+   Grade Calculator — all logic local, no network.
+   ========================================================= */
+const KEY = "uvaGradeCalc.v1";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const isNum = v => typeof v === "number" && isFinite(v);
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+/* ---------- formatting & rounding ---------- */
+function fmt(v, d = 2) {
+  if (!isNum(v)) return "–";
+  return String(Number(v.toFixed(d)));
+}
+function f2(v) { return isNum(v) ? (Math.round(v * 100) / 100).toFixed(2) : "–"; }
+function roundTo(v, mode) {
+  if (mode === "none" || !mode) return v;
+  const s = parseFloat(mode);
+  // half-up with float tolerance (6.25 -> 6.3)
+  return Math.round(v / s + 1e-9) * s;
+}
+function gradeText(v, mode) {
+  if (!isNum(v)) return "–";
+  if (mode === "1") return String(Math.round(v));
+  if (mode === "none") return (Math.round(v * 100) / 100).toFixed(2);
+  return (Math.round(v * 10) / 10).toFixed(1);
+}
+function roundLabel(mode) { return mode === "none" ? "no rounding" : "round to " + mode; }
+
+/* ---------- safe formula parser (no eval) ---------- */
+const FUNCS = { min: Math.min, max: Math.max, round: Math.round, floor: Math.floor, ceil: Math.ceil, sqrt: Math.sqrt, abs: Math.abs };
+function compileFormula(src) {
+  const s = String(src).replace(/×/g, "*").replace(/÷/g, "/").replace(/−/g, "-");
+  const toks = []; let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c)) { i++; continue; }
+    if (/[0-9.]/.test(c)) { let j = i; while (j < s.length && /[0-9.]/.test(s[j])) j++; const n = s.slice(i, j); if (isNaN(parseFloat(n)) || (n.match(/\./g) || []).length > 1) throw Error("Bad number “" + n + "”"); toks.push({ t: "n", v: parseFloat(n) }); i = j; continue; }
+    if (/[a-zA-Z_]/.test(c)) { let j = i; while (j < s.length && /[a-zA-Z_0-9]/.test(s[j])) j++; toks.push({ t: "id", v: s.slice(i, j).toLowerCase() }); i = j; continue; }
+    if ("+-*/^(),".includes(c)) { toks.push({ t: c }); i++; continue; }
+    throw Error("Unknown symbol “" + c + "”");
+  }
+  let p = 0;
+  const peek = () => toks[p], eat = t => { if (toks[p] && toks[p].t === t) { p++; return true; } return false; };
+  const need = t => { if (!eat(t)) throw Error("Expected “" + t + "”"); };
+  function expr() { let a = term(); for (;;) { if (eat("+")) { const l = a, r = term(); a = v => l(v) + r(v); } else if (eat("-")) { const l = a, r = term(); a = v => l(v) - r(v); } else return a; } }
+  function term() { let a = power(); for (;;) { if (eat("*")) { const l = a, r = power(); a = v => l(v) * r(v); } else if (eat("/")) { const l = a, r = power(); a = v => l(v) / r(v); } else return a; } }
+  function power() { const b = unary(); if (eat("^")) { const e = power(); return v => Math.pow(b(v), e(v)); } return b; }
+  function unary() { if (eat("-")) { const u = unary(); return v => -u(v); } if (eat("+")) return unary(); return prim(); }
+  function prim() {
+    const tk = peek(); if (!tk) throw Error("Formula ends too early");
+    if (tk.t === "n") { p++; const n = tk.v; return () => n; }
+    if (eat("(")) { const e = expr(); need(")"); return e; }
+    if (tk.t === "id") {
+      p++; const name = tk.v;
+      if (FUNCS[name]) { need("("); const args = [expr()]; while (eat(",")) args.push(expr()); need(")"); const f = FUNCS[name]; return v => f(...args.map(a => a(v))); }
+      if (!["x", "n", "g", "k", "lo", "hi", "p"].includes(name)) throw Error("Unknown name “" + name + "” (use x, n, g, k, lo, hi, p)");
+      return v => v[name];
+    }
+    throw Error("Unexpected “" + tk.t + "”");
+  }
+  if (!toks.length) throw Error("Formula is empty");
+  const f = expr();
+  if (p < toks.length) throw Error("Unexpected “" + (toks[p].v ?? toks[p].t) + "”");
+  return f;
+}
+
+/* ---------- defaults & presets ---------- */
+function newPart(kind) {
+  return kind === "mc"
+    ? { kind: "mc", n: 40, k: 4, guess: true, curve: "prop", cut: 27, formula: "10 * (x - g) / (n - g)" }
+    : { kind: "points", n: 100, k: 4, guess: false, curve: "prop", cut: 55, formula: "x / 10" };
+}
+function defaultExam() {
+  return { name: "", type: "points", parts: [newPart("points"), newPart("points")], weights: [50, 50],
+    lo: 1, hi: 10, round: "0.1", pass: 5.5, passCheck: "exact", passMode: "grade", passPoints: 55,
+    score: ["", ""], target: 5.5 };
+}
+function examplePresets() {
+  const q = defaultExam(); q.name = "QDA2 midterm";
+  const mc1 = defaultExam(); mc1.name = "MC 40 × 4, guessing correction"; mc1.type = "mc"; mc1.parts[0] = newPart("mc");
+  const mc2 = clone(mc1); mc2.name = "MC 40 × 4, 27 correct = 5.5"; mc2.parts[0].curve = "cut"; mc2.parts[0].cut = 27;
+  const mx = defaultExam(); mx.name = "Mixed: MC 30 × 4 + open 40 pts"; mx.type = "mixed";
+  mx.parts[0] = newPart("mc"); mx.parts[0].n = 30; mx.parts[1] = newPart("points"); mx.parts[1].n = 40; mx.weights = [50, 50];
+  const l50 = defaultExam(); l50.name = "MC 50 × 4 (last exam)"; l50.type = "mc"; l50.parts[0] = newPart("mc"); l50.parts[0].n = 50;
+  l50.lo = 0; l50.round = "none"; l50.target = 5.5;
+  return [
+    { id: "ex-mc50", name: l50.name, example: true, note: "max(40/3 × (s/n − 1/4), 0) · lowest grade 0 · no rounding · 34 correct = 5.73 pass", data: l50 },
+    { id: "ex-qda2", name: "QDA2 midterm", example: true, note: "100 points, grade = points ÷ 10 (assumed). Counts 40%.", data: q },
+    { id: "ex-mc", name: mc1.name, example: true, note: "10 × (correct − 10) ÷ 30", data: mc1 },
+    { id: "ex-mc27", name: mc2.name, example: true, note: "Pass point curve", data: mc2 },
+    { id: "ex-mix", name: mx.name, example: true, note: "Each part 50%", data: mx },
+  ];
+}
+function defaultCourse() {
+  return { name: "QDA2", pass: 5.5, target: 8, round: "0.1", passCheck: "exact",
+    comps: [ { id: uid(), name: "Midterm", weight: 40, grade: "", min: "" }, { id: uid(), name: "Final exam", weight: 60, grade: "", min: "" } ] };
+}
+function exampleCourses() {
+  return [{ id: "ex-qda2c", name: "QDA2", example: true, note: "Midterm 40% + final exam 60% (assumed, please check)", data: defaultCourse() }];
+}
+function defaultState() {
+  return {
+    theme: "auto", view: "exam", ui: { tablePart: 0 },
+    exam: clone(examplePresets()[0].data),
+    course: defaultCourse(),
+    avg: { target: 7, nextW: 6, rows: [ { id: uid(), name: "Course 1", grade: "", weight: 6 }, { id: uid(), name: "Course 2", grade: "", weight: 6 } ] },
+    presets: { exams: examplePresets(), courses: exampleCourses() },
+  };
+}
+
+/* ---------- storage (wrapped) ---------- */
+let storageOK = true;
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return defaultState();
+    const s = JSON.parse(raw), d = defaultState();
+    const merged = Object.assign(d, s);
+    merged.exam = Object.assign(defaultExam(), s.exam || {});
+    merged.ui = Object.assign({ tablePart: 0 }, s.ui || {});
+    merged.presets = Object.assign({ exams: [], courses: [] }, s.presets || {});
+    return merged;
+  } catch (e) { storageOK = false; return defaultState(); }
+}
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); storageOK = true; }
+    catch (e) { storageOK = false; }
+    const n = $("#storageNote");
+    if (n) n.textContent = storageOK ? "" : "This browser blocks local storage (private mode?). Your changes won't be kept after closing — use Export.";
+  }, 150);
+}
+let state = load();
+
+/* ---------- binding ---------- */
+function getPath(obj, path) { return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+function setPath(obj, path, val) { const ks = path.split("."); const last = ks.pop(); const o = ks.reduce((a, k) => a[k], obj); o[last] = val; }
+function readVal(el) {
+  if (el.type === "checkbox") return el.checked;
+  if (el.dataset.num) { const t = String(el.value).trim().replace(",", "."); if (t === "") return ""; const v = parseFloat(t); return isNaN(v) ? "" : v; }
+  return el.value;
+}
+function writeInputs(root = document) {
+  $$("[data-bind]", root).forEach(el => {
+    const v = getPath(state, el.dataset.bind);
+    if (el.type === "radio") el.checked = String(v) === el.value;
+    else if (el.type === "checkbox") el.checked = !!v;
+    else if (document.activeElement !== el) el.value = v ?? "";
+  });
+}
+function onEdit(e) {
+  const el = e.target; const path = el.dataset.bind; if (!path) return;
+  const textual = el.tagName === "INPUT" && (el.type === "text" || el.type === "number");
+  if (e.type === "input" && !textual) return;
+  if (e.type === "change" && textual) return;
+  setPath(state, path, readVal(el));
+  if (path === "exam.type") applyType();
+  if (el.dataset.struct) renderExamStructure();
+  refresh(); save();
+}
+document.addEventListener("input", onEdit);
+document.addEventListener("change", onEdit);
+
+/* info tooltips */
+document.addEventListener("click", e => {
+  const b = e.target.closest(".info"); if (!b) return;
+  const t = document.getElementById(b.dataset.tip); if (!t) return;
+  const open = !t.classList.contains("open");
+  t.classList.toggle("open", open); b.setAttribute("aria-expanded", open);
+});
+
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 2200); }
+
+/* ---------- theme ---------- */
+function applyTheme() {
+  const t = state.theme;
+  if (t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+  $("#themeBtn").textContent = t === "auto" ? "◐ Auto" : t === "light" ? "☀︎ Light" : "☾ Dark";
+  const dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+  $('meta[name="theme-color"]').setAttribute("content", dark ? "#121614" : "#f6f7f5");
+}
+$("#themeBtn").addEventListener("click", () => { state.theme = { auto: "light", light: "dark", dark: "auto" }[state.theme] || "auto"; applyTheme(); save(); });
+
+/* ---------- tabs ---------- */
+function showView(v) {
+  state.view = v;
+  $$("section.view").forEach(s => s.classList.toggle("active", s.id === "view-" + v));
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.view === v));
+  save();
+}
+$$("nav.tabs button").forEach(b => b.addEventListener("click", () => { showView(b.dataset.view); window.scrollTo(0, 0); }));
+
+/* =========================================================
+   EXAM MATHS
+   ========================================================= */
+function guessScore(part) { return part.kind === "mc" && part.guess ? part.n / part.k : 0; }
+function curveLabel(part) {
+  return { prop: "Proportional", min: "Lowest grade + scale", cut: "Pass point", custom: "Custom formula" }[part.curve];
+}
+// formula text for display
+function formulaText(part, ex) {
+  const g = guessScore(part), gs = g ? "g" : "0";
+  const xs = g ? "(x − g)" : "x", ds = g ? "(n − g)" : "n";
+  switch (part.curve) {
+    case "prop": return g ? `grade = ${fmt(ex.hi)} × (x − g) ÷ (n − g)` : `grade = ${fmt(ex.hi)} × x ÷ n`;
+    case "min": return `grade = ${fmt(ex.lo)} + ${fmt(ex.hi - ex.lo)} × ${xs} ÷ ${ds}`;
+    case "cut": return `below c: grade = ${fmt(ex.lo)} + ${fmt(ex.pass - ex.lo)} × (x − ${gs}) ÷ (c − ${gs});  from c: grade = ${fmt(ex.pass)} + ${fmt(ex.hi - ex.pass)} × (x − c) ÷ (n − c)`;
+    case "custom": return "grade = " + part.formula;
+  }
+}
+// raw part grade (unclamped) with steps
+function partRaw(part, x, ex, steps) {
+  const n = +part.n, g = guessScore(part), lo = +ex.lo, hi = +ex.hi, P = +ex.pass;
+  const S = steps || [];
+  if (part.kind === "mc" && part.guess) S.push(`Guess score <code>g = ${fmt(n)} ÷ ${fmt(part.k)} = ${fmt(g)}</code> (what you'd get by pure guessing)`);
+  let v;
+  switch (part.curve) {
+    case "prop":
+      v = hi * (x - g) / (n - g);
+      S.push(g ? `<code>${fmt(hi)} × (${fmt(x)} − ${fmt(g)}) ÷ (${fmt(n)} − ${fmt(g)}) = ${fmt(hi)} × ${fmt(x - g)} ÷ ${fmt(n - g)} = ${f2(v)}</code>`
+               : `<code>${fmt(hi)} × ${fmt(x)} ÷ ${fmt(n)} = ${f2(v)}</code>`);
+      break;
+    case "min":
+      v = lo + (hi - lo) * (x - g) / (n - g);
+      S.push(`<code>${fmt(lo)} + ${fmt(hi - lo)} × (${fmt(x)} − ${fmt(g)}) ÷ (${fmt(n)} − ${fmt(g)}) = ${fmt(lo)} + ${fmt(hi - lo)} × ${fmt(x - g)} ÷ ${fmt(n - g)} = ${f2(v)}</code>`);
+      break;
+    case "cut": {
+      const c = +part.cut;
+      if (x < c) { v = lo + (P - lo) * (x - g) / (c - g); S.push(`${fmt(x)} is below the pass point c = ${fmt(c)}: <code>${fmt(lo)} + ${fmt(P - lo)} × (${fmt(x)} − ${fmt(g)}) ÷ (${fmt(c)} − ${fmt(g)}) = ${f2(v)}</code>`); }
+      else { v = P + (hi - P) * (x - c) / (n - c); S.push(`${fmt(x)} is at/above the pass point c = ${fmt(c)}: <code>${fmt(P)} + ${fmt(hi - P)} × (${fmt(x)} − ${fmt(c)}) ÷ (${fmt(n)} − ${fmt(c)}) = ${f2(v)}</code>`); }
+      break;
+    }
+    case "custom": {
+      const f = compileFormula(part.formula);
+      v = f({ x, n, g, k: +part.k, lo, hi, p: P });
+      S.push(`<code>${esc(part.formula)}</code> with x = ${fmt(x)}, n = ${fmt(n)}${g ? ", g = " + fmt(g) : ""} → <code>${f2(v)}</code>`);
+      break;
+    }
+  }
+  return v;
+}
+function clampG(v, ex) { return Math.min(+ex.hi, Math.max(+ex.lo, v)); }
+// validate exam settings; returns error string or ""
+function partProblem(part, ex) {
+  const n = +part.n;
+  if (!(n > 0)) return "Enter the maximum score / number of questions.";
+  if (part.kind === "mc" && part.guess && !(part.k >= 2)) return "Enter the number of options (at least 2).";
+  const g = guessScore(part);
+  if (g >= n) return "The guess score must be lower than the maximum.";
+  if (part.curve === "cut") { if (!(part.cut > g && part.cut < n)) return `The pass point must be between ${fmt(g)} and ${fmt(n)}.`; }
+  if (part.curve === "custom") { try { compileFormula(part.formula); } catch (e) { return "Formula: " + e.message; } }
+  return "";
+}
+function examProblem(ex) {
+  if (!isNum(ex.lo) || !isNum(ex.hi) || ex.hi <= ex.lo) return "Highest grade must be above the lowest grade.";
+  if (!isNum(ex.pass)) return "Enter a pass mark.";
+  const parts = ex.type === "mixed" ? [0, 1] : [0];
+  for (const i of parts) { const pr = partProblem(ex.parts[i], ex); if (pr) return (ex.type === "mixed" ? (i ? "Part B: " : "Part A: ") : "") + pr; }
+  if (ex.type === "mixed" && !((+ex.weights[0]) + (+ex.weights[1]) > 0)) return "Enter the weights of both parts.";
+  return "";
+}
+// full exam grade from scores array
+function examGrade(ex, scores, wantSteps) {
+  const steps = [];
+  let exact;
+  if (ex.type !== "mixed") {
+    const raw = partRaw(ex.parts[0], scores[0], ex, steps);
+    exact = clampG(raw, ex);
+    if (exact !== raw) steps.push(`Keep within ${fmt(ex.lo)}–${fmt(ex.hi)} → <code>${f2(exact)}</code>`);
+  } else {
+    const w0 = +ex.weights[0], w1 = +ex.weights[1], W = w0 + w1, gs = [];
+    for (let i = 0; i < 2; i++) {
+      const ps = [];
+      const raw = partRaw(ex.parts[i], scores[i], ex, ps);
+      const c = clampG(raw, ex); gs.push(c);
+      steps.push(`<b>Part ${i ? "B" : "A"}</b> (${ex.parts[i].kind === "mc" ? "MC" : "open"}): ` + ps.join("; ") + (c !== raw ? `; kept within ${fmt(ex.lo)}–${fmt(ex.hi)} → <code>${f2(c)}</code>` : ""));
+    }
+    exact = (gs[0] * w0 + gs[1] * w1) / W;
+    steps.push(`Weighted: <code>(${f2(gs[0])} × ${fmt(w0)} + ${f2(gs[1])} × ${fmt(w1)}) ÷ ${fmt(W)} = ${f2(exact)}</code>`);
+  }
+  const rounded = roundTo(exact, ex.round);
+  steps.push(ex.round === "none" ? `No rounding → <code>${f2(rounded)}</code>` : `Round to ${ex.round} → <b>${gradeText(rounded, ex.round)}</b>`);
+  let pass;
+  if (ex.passMode === "points" && ex.type !== "mixed") {
+    pass = scores[0] >= +ex.passPoints;
+    steps.push(`Pass check: score ${fmt(scores[0])} ${pass ? "≥" : "<"} ${fmt(ex.passPoints)} needed → <b class="${pass ? "okline" : "badline"}">${pass ? "pass" : "fail"}</b>`);
+  } else {
+    const cmp = ex.passCheck === "rounded" ? rounded : exact;
+    pass = cmp >= +ex.pass - 1e-9;
+    steps.push(`Pass check: ${ex.passCheck === "rounded" ? "rounded" : "exact"} grade ${ex.passCheck === "rounded" ? gradeText(rounded, ex.round) : f2(exact)} ${pass ? "≥" : "<"} ${fmt(ex.pass)} → <b class="${pass ? "okline" : "badline"}">${pass ? "pass" : "fail"}</b>`);
+  }
+  return { exact, rounded, pass, steps };
+}
+// grade used for "≥ target" comparisons
+function checkGrade(ex, r) { return ex.passCheck === "rounded" ? r.rounded : r.exact; }
+function scoreStep(part) { return part.kind === "mc" ? 1 : (part.n <= 30 ? 0.5 : 1); }
+
+/* =========================================================
+   EXAM UI
+   ========================================================= */
+function applyType() {
+  const ex = state.exam;
+  if (ex.type === "mc" && ex.parts[0].kind !== "mc") ex.parts[0] = newPart("mc");
+  if (ex.type === "points" && ex.parts[0].kind !== "points") ex.parts[0] = newPart("points");
+  if (ex.type === "mixed") {
+    if (ex.parts[0].kind !== "mc") ex.parts[0] = newPart("mc");
+    if (!ex.parts[1] || ex.parts[1].kind !== "points") ex.parts[1] = newPart("points");
+    if (!ex.weights) ex.weights = [50, 50];
+    if (ex.passMode === "points") ex.passMode = "grade";
+  }
+  if (ex.type === "mc" && ex.passMode === "points") ex.passPoints = Math.min(ex.passPoints, ex.parts[0].n);
+}
+function partSetupHTML(i, mixed) {
+  const p = state.exam.parts[i], b = `exam.parts.${i}`;
+  const isMC = p.kind === "mc";
+  const id = s => `${s}-${i}`;
+  let h = "";
+  if (mixed) {
+    h += `<div class="part"><h3>Part ${i ? "B" : "A"}</h3>
+      <div class="field"><div class="seg">
+        <label><input type="radio" name="${id("kind")}" value="mc" data-bind="${b}.kind" data-struct="1"><span>Multiple choice</span></label>
+        <label><input type="radio" name="${id("kind")}" value="points" data-bind="${b}.kind" data-struct="1"><span>Open (points)</span></label>
+      </div></div>`;
+  }
+  h += `<div class="row">
+    <div class="field"><label class="lbl">${isMC ? "Number of questions" : "Maximum points"}</label><input type="text" inputmode="decimal" data-bind="${b}.n" data-num="1"></div>
+    ${isMC ? `<div class="field"><label class="lbl">Options per question</label><input type="text" inputmode="numeric" data-bind="${b}.k" data-num="1"></div>` : ""}
+    ${mixed ? `<div class="field"><label class="lbl">Weight %</label><input type="text" inputmode="decimal" data-bind="exam.weights.${i}" data-num="1"></div>` : ""}
+  </div>`;
+  if (isMC) {
+    h += `<div class="field"><div class="switch"><span class="lbl" style="margin:0">Guessing correction <button class="info" type="button" data-tip="${id("tipg")}" aria-expanded="false" aria-label="What is guessing correction?">i</button></span>
+      <input type="checkbox" data-bind="${b}.guess" data-struct="1" aria-label="Guessing correction"></div>
+      <p class="tip" id="${id("tipg")}">With 4 options, someone who guesses every question still gets about 1 in 4 right. That “guess score” (questions ÷ options, e.g. 40 ÷ 4 = 10) is worth nothing, so the grade only starts rising above it. 10 correct out of 40 then gives the lowest grade.</p></div>`;
+  }
+  h += `<div class="field"><label class="lbl">Grading curve <button class="info" type="button" data-tip="${id("tipc")}" aria-expanded="false" aria-label="About the curve">i</button></label>
+    <p class="tip" id="${id("tipc")}"><b>Proportional</b>: grade = 10 × score ÷ max (with guessing correction: counted from the guess score). <b>Lowest grade + scale</b>: the “1 + 9 × …” version, so 0 points gives the lowest grade. <b>Pass point</b>: you set which score gives exactly the pass mark (e.g. 27 of 40 = 5.5); the grade is a straight line below and above it. <b>Custom</b>: type any formula.</p>
+    <select data-bind="${b}.curve" data-struct="1">
+      <option value="prop">Proportional (10 × …)</option>
+      <option value="min">1 + 9 × … scale</option>
+      <option value="cut">Pass point (e.g. 27 = 5.5)</option>
+      <option value="custom">Custom formula</option>
+    </select></div>`;
+  if (p.curve === "cut") {
+    h += `<div class="field"><label class="lbl">Score that gives exactly the pass mark (c)</label>
+      <input type="text" inputmode="decimal" data-bind="${b}.cut" data-num="1"><div class="hint" id="${id("cuthint")}"></div></div>`;
+  }
+  if (p.curve === "custom") {
+    h += `<div class="field"><label class="lbl">Formula</label>
+      <input type="text" class="mono" data-bind="${b}.formula" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="10 * (x - 10) / (40 - 10)">
+      <div class="hint">Use <b>x</b> = your score, <b>n</b> = max, <b>g</b> = guess score, <b>k</b> = options, <b>lo</b>/<b>hi</b> = lowest/highest grade, <b>p</b> = pass mark. Allowed: + − * / ^ ( ) min max round floor ceil sqrt abs.</div>
+      <div id="${id("fprev")}"></div></div>`;
+  }
+  if (mixed) h += `</div>`;
+  return h;
+}
+function renderExamStructure() {
+  const ex = state.exam, mixed = ex.type === "mixed";
+  $("#setup").innerHTML = mixed ? partSetupHTML(0, true) + partSetupHTML(1, true) + `<div class="hint" style="margin-top:10px">Each part is graded on its own, then combined using the weights.</div>` : partSetupHTML(0, false);
+  // score inputs
+  const parts = mixed ? [0, 1] : [0];
+  $("#scoreInputs").innerHTML = parts.map(i => {
+    const p = ex.parts[i];
+    const lab = p.kind === "mc" ? "Correct answers" : "Points scored";
+    return `<div class="field"><label class="lbl">${mixed ? `Part ${i ? "B" : "A"}: ` : ""}${lab} <span class="hint" style="margin:0;font-weight:400">of ${fmt(p.n)}</span></label>
+      <input type="text" class="big" inputmode="decimal" data-bind="exam.score.${i}" data-num="1" placeholder="0"></div>`;
+  }).join("");
+  // pass mode
+  $("#pmPoints").classList.toggle("hidden", mixed);
+  const pts = ex.passMode === "points" && !mixed;
+  $("#passGradeRow").classList.toggle("hidden", pts);
+  $("#passPointsRow").classList.toggle("hidden", !pts);
+  $("#tablePartSeg").classList.toggle("hidden", !mixed);
+  if (!mixed) state.ui.tablePart = 0;
+  writeInputs($("#view-exam"));
+}
+
+function resultBlock(label, valueHTML, cls, badge, sub, formula, steps, mid) {
+  return `<div class="result ${cls}">
+    <div class="label">${label}</div>
+    <div class="grade${mid ? " mid" : ""}">${valueHTML}</div>
+    ${badge ? `<span class="badge">${badge}</span>` : ""}
+    ${sub ? `<div class="sub">${sub}</div>` : ""}
+  </div>
+  ${formula ? `<div class="formula">${esc(formula)}</div>` : ""}
+  ${steps && steps.length ? `<details class="steps"><summary>Show calculation step by step</summary><ol class="calc">${steps.map(s => `<li>${s}</li>`).join("")}</ol></details>` : ""}`;
+}
+
+function updateExam() {
+  const ex = state.exam, mixed = ex.type === "mixed";
+  const prob = examProblem(ex);
+  // custom formula preview + cut hint
+  [0, 1].forEach(i => {
+    const p = ex.parts[i], prev = document.getElementById("fprev-" + i);
+    if (prev) {
+      try {
+        compileFormula(p.formula);
+        const n = +p.n || 0; const xs = [0, n * 0.25, n * 0.5, n * 0.75, n].map(v => Math.round(v * 2) / 2);
+        prev.innerHTML = `<div class="mini">${xs.slice(1, 4).map(x => { const raw = partRaw(p, x, ex); const c = clampG(raw, ex); return `<div>x = ${fmt(x)}<b>${gradeText(roundTo(c, ex.round), ex.round)}</b></div>`; }).join("")}</div>`;
+      } catch (e) { prev.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+    }
+    const ch = document.getElementById("cuthint-" + i);
+    if (ch && +p.n > 0) ch.textContent = `${fmt(p.cut)} of ${fmt(p.n)} = ${fmt(100 * p.cut / p.n, 1)}% needed for a ${fmt(ex.pass)}`;
+  });
+
+  const out = $("#examResult"), need = $("#neededResult");
+  // target chips
+  $("#targetChips").innerHTML = [ex.pass, 6, 7, 8, 9].filter((v, i, a) => isNum(v) && a.indexOf(v) === i)
+    .map(v => `<button class="chip" type="button" data-target="${v}">${v === ex.pass ? "Pass (" + fmt(v) + ")" : fmt(v)}</button>`).join("");
+
+  if (prob) { out.innerHTML = `<div class="note"><b>Check settings:</b> ${esc(prob)}</div>`; need.innerHTML = ""; $("#chartBox").innerHTML = ""; $("#tableBox").innerHTML = ""; $("#tableHint").textContent = ""; return; }
+
+  /* ---- 1. grade from score ---- */
+  const idx = mixed ? [0, 1] : [0];
+  const sc = idx.map(i => ex.score[i]);
+  const formula = mixed ? `grade = (grade A × ${fmt(ex.weights[0])} + grade B × ${fmt(ex.weights[1])}) ÷ ${fmt(+ex.weights[0] + +ex.weights[1])}` : formulaText(ex.parts[0], ex);
+  const bad = idx.find(i => isNum(ex.score[i]) && (ex.score[i] < 0 || ex.score[i] > ex.parts[i].n));
+  if (sc.some(v => !isNum(v))) {
+    out.innerHTML = resultBlock("Your grade", "–", "", "", mixed ? "Enter both scores to see your grade" : "Enter your score to see your grade", formula, null);
+  } else if (bad !== undefined) {
+    out.innerHTML = `<div class="note"><b>Score out of range:</b> must be between 0 and ${fmt(ex.parts[bad].n)}.</div>`;
+  } else {
+    const r = examGrade(ex, sc, true);
+    const pct = !mixed ? ` · ${fmt(100 * sc[0] / ex.parts[0].n, 1)}% of max` : "";
+    out.innerHTML = resultBlock("Your grade", gradeText(r.rounded, ex.round), r.pass ? "pass" : "fail", r.pass ? "✓ Pass" : "✗ Not passed",
+      `Exact: ${f2(r.exact)}${pct}` + (!r.pass && ex.passMode !== "points" && ex.passCheck === "exact" && r.rounded >= ex.pass - 1e-9 ? `<br><b>Rounds to ${gradeText(r.rounded, ex.round)}, but the exact grade ${f2(r.exact)} is below ${fmt(ex.pass)}.</b>` : ""), formula, r.steps);
+  }
+
+  /* ---- 2. score needed ---- */
+  const T = ex.target;
+  if (!isNum(T)) { need.innerHTML = ""; }
+  else if (T > ex.hi + 1e-9) { need.innerHTML = `<div class="note"><b>Not possible:</b> the highest grade is ${fmt(ex.hi)}.</div>`; }
+  else {
+    const fi = mixed ? 1 : 0; // part we solve for
+    if (mixed && !isNum(ex.score[0])) {
+      need.innerHTML = `<div class="note">Enter your <b>Part A</b> score above; then I'll show what you need on Part B.</div>`;
+    } else {
+      const p = ex.parts[fi], step = scoreStep(p);
+      const scoresAt = x => mixed ? [ex.score[0], x] : [x];
+      const usePts = ex.passMode === "points" && !mixed && Math.abs(T - ex.pass) < 1e-9;
+      let found = null, prevR = null;
+      for (let x = 0; x <= p.n + 1e-9; x = Math.round((x + step) * 1000) / 1000) {
+        const r = examGrade(ex, scoresAt(x));
+        const ok = usePts ? x >= ex.passPoints : checkGrade(ex, r) >= T - 1e-9;
+        if (ok) { found = { x, r }; break; }
+        prevR = { x, r };
+      }
+      const what = p.kind === "mc" ? "correct answers" : "points";
+      if (!found) {
+        need.innerHTML = resultBlock(`Needed for a ${fmt(T)}`, "✗", "fail", "Not reachable", mixed ? `Even full marks on Part B isn't enough with ${fmt(ex.score[0])} on Part A.` : "Even a full score isn't enough.", null, null, true);
+      } else {
+        const st = [];
+        if (usePts) st.push(`Pass rule is “at least ${fmt(ex.passPoints)} points”.`);
+        else {
+          st.push(`Rule: ${ex.passCheck === "rounded" ? "rounded" : "exact"} grade must be ≥ ${fmt(T)}. Checked every ${step === 1 ? "whole" : step} ${p.kind === "mc" ? "answer" : "point"} from 0 to ${fmt(p.n)}.`);
+          if (prevR) st.push(`${fmt(prevR.x)} ${what} → exact ${f2(prevR.r.exact)}, rounded ${gradeText(prevR.r.rounded, ex.round)} → not enough`);
+          st.push(`${fmt(found.x)} ${what} → exact ${f2(found.r.exact)}, rounded ${gradeText(found.r.rounded, ex.round)} → <b class="okline">enough</b>`);
+          if (!mixed && p.curve !== "custom") {
+            const g = guessScore(p), lo = +ex.lo, hi = +ex.hi, P = +ex.pass; let xc;
+            if (p.curve === "prop") xc = g + T * (p.n - g) / hi;
+            if (p.curve === "min") xc = g + (T - lo) * (p.n - g) / (hi - lo);
+            if (p.curve === "cut") xc = T < P ? g + (T - lo) * (p.cut - g) / (P - lo) : p.cut + (T - P) * (p.n - p.cut) / (hi - P);
+            if (isNum(xc) && ex.passCheck === "exact") st.unshift(`Solving the formula for x: exactly ${f2(xc)} ${what} gives ${fmt(T)}; rounded up to the next possible score.`);
+          }
+        }
+        need.innerHTML = resultBlock(`Needed for a ${fmt(T)}${mixed ? " (Part B)" : ""}`, `${fmt(found.x)}<span style="font-size:.4em;font-weight:600;color:var(--muted)"> / ${fmt(p.n)}</span>`, "pass",
+          `${fmt(100 * found.x / p.n, 1)}% ${what}`, `That gives a ${gradeText(found.r.rounded, ex.round)}${mixed ? ` (with ${fmt(ex.score[0])} on Part A)` : ""}`, mixed ? null : formulaText(p, ex), st, true);
+      }
+    }
+  }
+
+  /* ---- 3. table + chart ---- */
+  renderTableChart();
+}
+
+function renderTableChart() {
+  const ex = state.exam, mixed = ex.type === "mixed";
+  const pi = mixed ? (+state.ui.tablePart || 0) : 0, p = ex.parts[pi];
+  const step = scoreStep(p), n = +p.n;
+  // part-only view for mixed: grade of that part alone (clamped, rounded)
+  const gradeAt = x => {
+    if (!mixed) return examGrade(ex, [x]);
+    const raw = partRaw(p, x, ex); const exact = clampG(raw, ex); const rounded = roundTo(exact, ex.round);
+    return { exact, rounded, pass: (ex.passCheck === "rounded" ? rounded : exact) >= ex.pass - 1e-9 };
+  };
+  let st = step; while (n / st > 300) st *= 2; // keep table manageable
+  const rows = []; let firstPass = null;
+  for (let x = 0; x <= n + 1e-9; x = Math.round((x + st) * 1000) / 1000) { const r = gradeAt(x); rows.push({ x, r }); if (r.pass && firstPass === null) firstPass = x; }
+  if (rows[rows.length - 1].x < n) { rows.push({ x: n, r: gradeAt(n) }); }
+  const cur = ex.score[pi];
+  $("#tableBox").innerHTML = `<table><thead><tr><th>${p.kind === "mc" ? "Correct" : "Points"}</th><th>%</th><th>Exact</th><th>Grade</th></tr></thead><tbody>` +
+    rows.map(({ x, r }) => `<tr class="${r.pass ? "p" : "f"}${x === firstPass ? " edge" : ""}${isNum(cur) && Math.abs(cur - x) < 1e-9 ? " cur" : ""}"><td>${fmt(x)}</td><td>${fmt(100 * x / n, 1)}</td><td>${f2(r.exact)}</td><td>${gradeText(r.rounded, ex.round)}</td></tr>`).join("") + `</tbody></table>`;
+  $("#tableHint").innerHTML = (firstPass !== null ? `Highlighted row: lowest passing score (<b>${fmt(firstPass)}</b>). ` : "No passing score. ") + (mixed ? "This shows Part " + (pi ? "B" : "A") + " on its own." : "");
+  // scroll pass row into view inside table
+  const edge = $("#tableBox tr.edge"); if (edge) { const tb = $("#tableBox"); tb.scrollTop = Math.max(0, edge.offsetTop - tb.clientHeight / 2); }
+
+  // chart
+  const W = 400, H = 260, L = 30, R = 10, Tp = 12, B = 34;
+  const ymin = Math.min(0, +ex.lo), ymax = +ex.hi;
+  const sx = x => L + (W - L - R) * x / n, sy = y => Tp + (H - Tp - B) * (1 - (y - ymin) / (ymax - ymin));
+  const N = 240; let pts = "";
+  for (let i = 0; i <= N; i++) { const x = n * i / N; const r = gradeAt(x); pts += `${sx(x).toFixed(1)},${sy(r.exact).toFixed(1)} `; }
+  let grid = "";
+  for (let y = Math.ceil(ymin); y <= ymax; y++) grid += `<line class="gridl" x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}"/><text x="${L - 8}" y="${sy(y) + 4}" text-anchor="end">${y}</text>`;
+  const xt = niceTicks(n);
+  grid += xt.map(x => `<text x="${sx(x)}" y="${H - B + 18}" text-anchor="middle">${fmt(x)}</text>`).join("");
+  const passY = sy(+ex.pass);
+  let marks = `<line class="passl" x1="${L}" x2="${W - R}" y1="${passY}" y2="${passY}"/><text class="passlbl" x="${W - R - 4}" y="${passY - 6}" text-anchor="end">pass ${fmt(ex.pass)}</text>`;
+  if (firstPass !== null) marks += `<line class="passl" x1="${sx(firstPass)}" x2="${sx(firstPass)}" y1="${passY}" y2="${H - B}"/><text class="passlbl" x="${sx(firstPass) + 5}" y="${H - B - 6}">${fmt(firstPass)}</text>`;
+  if (isNum(cur) && cur >= 0 && cur <= n) { const r = gradeAt(cur); marks += `<circle class="dot" cx="${sx(cur)}" cy="${sy(r.exact)}" r="7"/>`; }
+  $("#chartBox").innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Chart of score against grade">
+    ${grid}<line class="axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/><line class="axis" x1="${L}" x2="${L}" y1="${Tp}" y2="${H - B}"/>
+    <polyline class="curve" points="${pts.trim()}"/>${marks}
+    <text x="${(L + W - R) / 2}" y="${H - 4}" text-anchor="middle">${p.kind === "mc" ? "correct answers" : "points"}</text></svg>`;
+}
+function niceTicks(n) {
+  const raw = n / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / mag;
+  const st = (m < 1.5 ? 1 : m < 3 ? 2 : m < 7 ? 5 : 10) * mag;
+  const t = []; for (let x = 0; x <= n + 1e-9; x += st) t.push(Math.round(x * 1000) / 1000);
+  return t;
+}
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-target]"); if (!c) return;
+  state.exam.target = parseFloat(c.dataset.target); writeInputs($("#view-exam")); refresh(); save();
+});
+
+/* =========================================================
+   COURSE
+   ========================================================= */
+function renderCompList() {
+  const c = state.course;
+  $("#compList").innerHTML = c.comps.map((k, i) => `<div class="comp">
+    <div class="comp-h"><input type="text" data-bind="course.comps.${i}.name" placeholder="Part name" aria-label="Part name"><button class="x" type="button" data-delcomp="${i}" aria-label="Remove part">×</button></div>
+    <div class="row">
+      <div class="field"><label class="lbl">Weight %</label><input type="text" inputmode="decimal" data-bind="course.comps.${i}.weight" data-num="1"></div>
+      <div class="field"><label class="lbl">Grade</label><input type="text" inputmode="decimal" data-bind="course.comps.${i}.grade" data-num="1" placeholder="not yet"></div>
+      <div class="field"><label class="lbl">Min. <button class="info" type="button" data-tip="tipmin-${i}" aria-expanded="false" aria-label="About minimum">i</button></label><input type="text" inputmode="decimal" data-bind="course.comps.${i}.min" data-num="1" placeholder="none"></div>
+    </div>
+    <p class="tip" id="tipmin-${i}">Some courses require a minimum for one part, e.g. “final exam at least 5.0”. If you score below it, you fail the course even if your average is high enough. Leave empty if there is no minimum.</p>
+  </div>`).join("");
+  writeInputs($("#compList"));
+}
+$("#addComp").addEventListener("click", () => { state.course.comps.push({ id: uid(), name: "Part " + (state.course.comps.length + 1), weight: "", grade: "", min: "" }); renderCompList(); refresh(); save(); });
+$("#compList").addEventListener("click", e => { const b = e.target.closest("[data-delcomp]"); if (!b) return; state.course.comps.splice(+b.dataset.delcomp, 1); renderCompList(); refresh(); save(); });
+
+function neededForCourse(c, target, check) {
+  // all remaining parts need the same grade x. Exact: (S + x*Wu)/W >= target
+  const known = c.comps.filter(k => isNum(k.grade) && isNum(k.weight));
+  const unknown = c.comps.filter(k => !isNum(k.grade) && isNum(k.weight) && k.weight > 0);
+  const W = c.comps.reduce((a, k) => a + (isNum(k.weight) ? k.weight : 0), 0);
+  const S = known.reduce((a, k) => a + k.grade * k.weight, 0);
+  const Wu = unknown.reduce((a, k) => a + k.weight, 0);
+  const thr = check === "rounded" && c.round !== "none" ? target - parseFloat(c.round) / 2 : target;
+  const x = (thr * W - S) / Wu;
+  const minReq = unknown.reduce((a, k) => Math.max(a, isNum(k.min) ? k.min : -Infinity), -Infinity);
+  return { x, W, S, Wu, thr, minReq, unknown, known, final: Math.max(x, minReq) };
+}
+function updateCourse() {
+  const c = state.course, out = $("#courseResult");
+  const W = c.comps.reduce((a, k) => a + (isNum(k.weight) ? k.weight : 0), 0);
+  $("#weightSum").innerHTML = `Weights total: <b style="color:${Math.abs(W - 100) < 1e-6 ? "var(--pass)" : "var(--warn)"}">${fmt(W)}%</b>`;
+  if (!c.comps.length || !(W > 0)) { out.innerHTML = `<div class="card" style="margin-top:12px"><div class="hint">Add parts with weights to see your course grade.</div></div>`; return; }
+  if (!isNum(c.pass)) { out.innerHTML = `<div class="card" style="margin-top:12px"><div class="note"><b>Enter a pass mark.</b></div></div>`; return; }
+  const warnW = Math.abs(W - 100) > 1e-6 ? `<div class="note"><b>Weights add up to ${fmt(W)}%, not 100%.</b> I divide by ${fmt(W)} so the result is still an average; check your course manual.</div>` : "";
+  const known = c.comps.filter(k => isNum(k.grade) && isNum(k.weight));
+  const unknown = c.comps.filter(k => !isNum(k.grade) && isNum(k.weight) && k.weight > 0);
+  const failedMin = known.filter(k => isNum(k.min) && k.grade < k.min - 1e-9);
+  const terms = known.map(k => `${fmt(k.grade)} × ${fmt(k.weight)}`).join(" + ");
+  let html = "";
+
+  if (!unknown.length) {
+    const S = known.reduce((a, k) => a + k.grade * k.weight, 0);
+    const exact = S / W, rounded = roundTo(exact, c.round);
+    const cmp = c.passCheck === "rounded" ? rounded : exact;
+    const avgOK = cmp >= c.pass - 1e-9, pass = avgOK && !failedMin.length;
+    const steps = [
+      `<code>(${terms}) ÷ ${fmt(W)} = ${f2(S)} ÷ ${fmt(W)} = ${f2(exact)}</code>`,
+      c.round === "none" ? "No rounding" : `Round to ${c.round} → <b>${gradeText(rounded, c.round)}</b>`,
+      `Average check: ${c.passCheck === "rounded" ? gradeText(rounded, c.round) : f2(exact)} ${avgOK ? "≥" : "<"} ${fmt(c.pass)}`,
+      ...known.filter(k => isNum(k.min)).map(k => `Minimum for ${esc(k.name || "part")}: ${fmt(k.grade)} ${k.grade >= k.min - 1e-9 ? "≥" : "<"} ${fmt(k.min)} → ${k.grade >= k.min - 1e-9 ? '<span class="okline">OK</span>' : '<span class="badline">not met</span>'}`),
+      `Result: <b class="${pass ? "okline" : "badline"}">${pass ? "pass" : "fail"}</b>`,
+    ];
+    html = `<div class="card" style="margin-top:12px">${resultBlock("Course grade", gradeText(rounded, c.round), pass ? "pass" : "fail", pass ? "✓ Pass" : "✗ Not passed",
+      failedMin.length ? `Minimum not met: ${failedMin.map(k => esc(k.name || "part")).join(", ")}` : `Exact: ${f2(exact)}`, "course grade = (grade × weight + …) ÷ total weight", steps)}${warnW}</div>`;
+    out.innerHTML = html; return;
+  }
+
+  // partial: what do I need
+  const Sk = known.reduce((a, k) => a + k.grade * k.weight, 0);
+  const Wk = known.reduce((a, k) => a + k.weight, 0);
+  const sofar = Wk > 0 ? Sk / Wk : null;
+  const names = unknown.map(k => esc(k.name || "part")).join(" + ");
+  const blocks = [];
+  const lo = 1, hi = 10;
+  [["pass", c.pass], ["target", c.target]].forEach(([kind, T]) => {
+    if (!isNum(T)) return;
+    if (kind === "target" && Math.abs(T - c.pass) < 1e-9) return;
+    const r = neededForCourse(c, T, c.passCheck);
+    const steps = [
+      `Done so far: <code>${terms || "nothing"}</code> = ${f2(r.S)} (of total weight ${fmt(r.W)})`,
+      c.passCheck === "rounded" && c.round !== "none" ? `With rounding to ${c.round}, an exact ${f2(r.thr)} already rounds to ${fmt(T)}.` : `The exact grade must reach ${fmt(T)}.`,
+      `Needed on ${names} (weight ${fmt(r.Wu)}): <code>(${f2(r.thr)} × ${fmt(r.W)} − ${f2(r.S)}) ÷ ${fmt(r.Wu)} = ${f2(r.x)}</code>`,
+    ];
+    if (isNum(r.minReq) && r.minReq > r.x) steps.push(`But the minimum for ${names} is ${fmt(r.minReq)}, so you need at least that.`);
+    const val = r.final;
+    let big, cls, badge, sub;
+    if (failedMin.length) { big = "✗"; cls = "fail"; badge = "Minimum not met"; sub = `You scored below the minimum for ${failedMin.map(k => esc(k.name || "part")).join(", ")}. Check your resit options.`; }
+    else if (val > hi + 1e-9) { big = "✗"; cls = "fail"; badge = "Not reachable"; sub = `You'd need ${f2(val)}, which is above ${hi}.`; }
+    else if (val <= lo) { big = fmt(lo, 1); cls = "pass"; badge = "Already safe"; sub = `Any grade works${isNum(r.minReq) ? " (as long as you meet the minimum)" : ""}.`; }
+    else { const up = Math.ceil(val * 10 - 1e-9) / 10; big = up.toFixed(1); cls = "pass"; badge = unknown.length > 1 ? "on each remaining part" : "on " + names; sub = `Exact: ${f2(val)} → at least <b>${up.toFixed(1)}</b> if grades are given to 0.1`; }
+    blocks.push(resultBlock(kind === "pass" ? `To pass (${fmt(T)})` : `To get a ${fmt(T)}`, big, cls, badge, sub, null, steps, true));
+  });
+  html = `<div class="card" style="margin-top:12px">
+    ${sofar !== null ? `<div class="mini" style="grid-template-columns:1fr 1fr;margin-top:0"><div>Average so far<b>${f2(sofar)}</b></div><div>Weight done<b>${fmt(Wk)}%</b></div></div>` : ""}
+    <div class="formula">needed = (goal × total weight − points so far) ÷ remaining weight</div>
+    ${blocks.join("")}${warnW}</div>`;
+  out.innerHTML = html;
+}
+
+/* =========================================================
+   AVERAGE
+   ========================================================= */
+function renderAvgList() {
+  $("#avgList").innerHTML = state.avg.rows.map((k, i) => `<div class="comp">
+    <div class="comp-h"><input type="text" data-bind="avg.rows.${i}.name" placeholder="Course name" aria-label="Course name"><button class="x" type="button" data-delavg="${i}" aria-label="Remove course">×</button></div>
+    <div class="row">
+      <div class="field"><label class="lbl">Grade</label><input type="text" inputmode="decimal" data-bind="avg.rows.${i}.grade" data-num="1" placeholder="e.g. 7.5"></div>
+      <div class="field"><label class="lbl">Weight</label><input type="text" inputmode="decimal" data-bind="avg.rows.${i}.weight" data-num="1" placeholder="e.g. 6 EC"></div>
+    </div></div>`).join("");
+  writeInputs($("#avgList"));
+}
+$("#addAvg").addEventListener("click", () => { state.avg.rows.push({ id: uid(), name: "", grade: "", weight: 6 }); renderAvgList(); refresh(); save(); });
+$("#avgList").addEventListener("click", e => { const b = e.target.closest("[data-delavg]"); if (!b) return; state.avg.rows.splice(+b.dataset.delavg, 1); renderAvgList(); refresh(); save(); });
+function updateAvg() {
+  const rows = state.avg.rows.filter(r => isNum(r.grade) && isNum(r.weight) && r.weight > 0);
+  $("#avgCount").textContent = `${rows.length} of ${state.avg.rows.length} counted`;
+  const out = $("#avgResult"), need = $("#avgNeed");
+  if (!rows.length) { out.innerHTML = `<div class="card" style="margin-top:12px"><div class="hint">Enter grades and weights to see your average.</div></div>`; need.innerHTML = ""; return; }
+  const S = rows.reduce((a, r) => a + r.grade * r.weight, 0), W = rows.reduce((a, r) => a + r.weight, 0), avg = S / W;
+  const simple = rows.reduce((a, r) => a + r.grade, 0) / rows.length;
+  const steps = [
+    `<code>(${rows.map(r => `${fmt(r.grade)} × ${fmt(r.weight)}`).join(" + ")}) ÷ (${rows.map(r => fmt(r.weight)).join(" + ")})</code>`,
+    `<code>= ${f2(S)} ÷ ${fmt(W)} = ${f2(avg)}</code>`,
+    `For comparison, the simple (unweighted) average is ${f2(simple)}.`,
+  ];
+  out.innerHTML = `<div class="card" style="margin-top:12px">${resultBlock("Weighted average", f2(avg), avg >= 5.5 ? "pass" : "fail", "", `Total weight ${fmt(W)} · simple average ${f2(simple)}`, "average = (grade × weight + …) ÷ (sum of weights)", steps)}</div>`;
+  const T = state.avg.target, w = state.avg.nextW;
+  if (!isNum(T) || !(w > 0)) { need.innerHTML = ""; return; }
+  const x = (T * (W + w) - S) / w;
+  const st = [`<code>(${fmt(T)} × (${fmt(W)} + ${fmt(w)}) − ${f2(S)}) ÷ ${fmt(w)} = ${f2(x)}</code>`];
+  let big, cls, badge;
+  if (x > 10 + 1e-9) { big = "✗"; cls = "fail"; badge = "Not reachable with one course"; }
+  else if (x <= 1) { big = "1.0"; cls = "pass"; badge = "Any grade keeps you there"; }
+  else { big = (Math.ceil(x * 10 - 1e-9) / 10).toFixed(1); cls = "pass"; badge = "on your next course"; }
+  need.innerHTML = resultBlock(`Needed for a ${fmt(T)} average`, big, cls, badge, `Exact: ${f2(x)}`, "needed = (goal × (total weight + new weight) − points so far) ÷ new weight", st, true);
+}
+
+/* =========================================================
+   PRESETS + IMPORT/EXPORT
+   ========================================================= */
+function presetRow(p, kind) {
+  return `<div class="preset"><div class="nm"><b>${esc(p.name)}${p.example ? '<span class="tag">example</span>' : ""}</b><small>${esc(p.note || "")}</small></div>
+    <button class="btn small" type="button" data-load="${kind}:${esc(p.id)}">Load</button>
+    <button class="btn small danger" type="button" data-del="${kind}:${esc(p.id)}" aria-label="Delete ${esc(p.name)}">Delete</button></div>`;
+}
+function renderPresets() {
+  const P = state.presets;
+  $("#examPresets").innerHTML = P.exams.length ? P.exams.map(p => presetRow(p, "exam")).join("") : `<div class="hint">No saved exams yet. Save one at the bottom of the Exam tab.</div>`;
+  $("#coursePresets").innerHTML = P.courses.length ? P.courses.map(p => presetRow(p, "course")).join("") : `<div class="hint">No saved courses yet.</div>`;
+}
+function describeExam(e) {
+  const p = e.parts[0];
+  if (e.type === "mixed") return `Mixed · A ${e.weights[0]}% / B ${e.weights[1]}% · pass ${fmt(e.pass)}`;
+  return `${e.type === "mc" ? `MC ${fmt(p.n)} × ${fmt(p.k)}${p.guess ? ", guessing corr." : ""}` : `${fmt(p.n)} points`} · ${curveLabel(p)} · pass ${e.passMode === "points" ? fmt(e.passPoints) + " pts" : fmt(e.pass)}`;
+}
+$("#saveExamBtn").addEventListener("click", () => {
+  const name = $("#saveExamName").value.trim() || state.exam.name || "My exam";
+  const data = clone(state.exam); data.name = name; state.exam.name = name;
+  const ex = state.presets.exams.find(p => p.name === name && !p.example);
+  if (ex) { ex.data = data; ex.note = describeExam(data); } else state.presets.exams.unshift({ id: uid(), name, note: describeExam(data), data });
+  $("#saveExamName").value = ""; writeInputs(); renderPresets(); save(); toast(`Saved “${name}”`);
+});
+$("#saveCourseBtn").addEventListener("click", () => {
+  const name = $("#saveCourseName").value.trim() || state.course.name || "My course";
+  const data = clone(state.course); data.name = name; state.course.name = name;
+  const note = data.comps.map(k => `${k.name || "part"} ${fmt(k.weight)}%`).join(" · ");
+  const ex = state.presets.courses.find(p => p.name === name && !p.example);
+  if (ex) { ex.data = data; ex.note = note; } else state.presets.courses.unshift({ id: uid(), name, note, data });
+  $("#saveCourseName").value = ""; writeInputs(); renderPresets(); save(); toast(`Saved “${name}”`);
+});
+document.addEventListener("click", e => {
+  const l = e.target.closest("[data-load]"), d = e.target.closest("[data-del]");
+  if (l) {
+    const [kind, id] = l.dataset.load.split(":");
+    const list = kind === "exam" ? state.presets.exams : state.presets.courses, p = list.find(x => x.id === id); if (!p) return;
+    if (kind === "exam") { state.exam = Object.assign(defaultExam(), clone(p.data)); state.ui.tablePart = 0; renderExamStructure(); showView("exam"); }
+    else { state.course = clone(p.data); state.course.comps.forEach(k => k.id = k.id || uid()); renderCompList(); showView("course"); }
+    writeInputs(); refresh(); save(); toast(`Loaded “${p.name}”`); window.scrollTo(0, 0);
+  }
+  if (d) {
+    const [kind, id] = d.dataset.del.split(":");
+    const key = kind === "exam" ? "exams" : "courses"; const p = state.presets[key].find(x => x.id === id);
+    state.presets[key] = state.presets[key].filter(x => x.id !== id); renderPresets(); save();
+    if (p) toast(`Deleted “${p.name}”`);
+  }
+});
+$("#exportBtn").addEventListener("click", () => {
+  const data = { app: "uva-grade-calculator", version: 1, exported: new Date().toISOString(), exams: state.presets.exams, courses: state.presets.courses, average: state.avg };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "grade-presets.json";
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Exported grade-presets.json");
+});
+$("#importFile").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result);
+      if (!d || d.app !== "uva-grade-calculator" || !Array.isArray(d.exams) || !Array.isArray(d.courses)) throw Error("not a preset file");
+      let added = 0;
+      const merge = (list, items, isExam) => items.forEach(p => {
+        if (!p || typeof p.name !== "string" || typeof p.data !== "object") return;
+        if (isExam && !Array.isArray(p.data.parts)) return;
+        if (!isExam && !Array.isArray(p.data.comps)) return;
+        const i = list.findIndex(x => x.id === p.id);
+        const item = { id: String(p.id || uid()), name: p.name.slice(0, 120), note: String(p.note || "").slice(0, 200), example: !!p.example, data: p.data };
+        if (i >= 0) list[i] = item; else { list.push(item); added++; }
+      });
+      merge(state.presets.exams, d.exams, true); merge(state.presets.courses, d.courses, false);
+      if (d.average && Array.isArray(d.average.rows)) state.avg = Object.assign({ target: 7, nextW: 6 }, d.average);
+      renderPresets(); renderAvgList(); refresh(); save(); toast(`Imported (${added} new)`);
+    } catch (err) { toast("Couldn't import: " + err.message); }
+    e.target.value = "";
+  };
+  rd.readAsText(f);
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function refresh() {
+  try { updateExam(); } catch (e) { $("#examResult").innerHTML = `<div class="note"><b>Something went wrong:</b> ${esc(e.message)}</div>`; }
+  try { updateCourse(); } catch (e) { $("#courseResult").innerHTML = `<div class="note"><b>Something went wrong:</b> ${esc(e.message)}</div>`; }
+  try { updateAvg(); } catch (e) { $("#avgResult").innerHTML = `<div class="note"><b>Something went wrong:</b> ${esc(e.message)}</div>`; }
+}
+applyTheme();
+if (window.matchMedia) { const mq = matchMedia("(prefers-color-scheme: dark)"); (mq.addEventListener ? mq.addEventListener("change", applyTheme) : mq.addListener(applyTheme)); }
+renderExamStructure(); renderCompList(); renderAvgList(); renderPresets();
+writeInputs(); refresh(); showView(state.view || "exam");
+if (!storageOK) $("#storageNote").textContent = "This browser blocks local storage. Use Export to keep your presets.";
+// expose pure functions for testing
+window.__calc = { examGrade, defaultExam, newPart, neededForCourse, compileFormula, roundTo };
+</script>
+</body>
+</html>
